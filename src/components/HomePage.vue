@@ -3,7 +3,7 @@
     <div class="grid grid-nogutter -m-2">
       <!-- Top Grid -->
       <div class="col-12 shadow-bottom">
-        <HeaderComp  />
+        <HeaderComp user-id="1" />
       </div>
 
       <!-- Bottom Grids -->
@@ -85,7 +85,7 @@
                     style="width: 18rem; height: 20rem; overflow: hidden"
                   >
                     <template #header>
-                      <p-Button outlined class="w-18rem h-12rem border-none card-button">
+                      <p-Button outlined class="w-18rem h-12rem border-none card-button" @click="recipeButton(image)">
                         <img :alt="image.title" :src="image.url" class="w-full h-full"/>
                       </p-Button>
                     </template>
@@ -134,6 +134,16 @@ import { ref, onMounted } from 'vue';
 import HeaderComp from '@/components/HeaderComp.vue';
 
 
+interface Image {
+  title: string;
+  url: string;
+  cookTime: string;
+  courseType: string;
+  skillLevel: string;
+  rating: number;
+  calories: string;
+}
+
 export default defineComponent({
   
   components: {
@@ -180,7 +190,7 @@ export default defineComponent({
     const selectedOrderBy = ref([]);
 
     const images = ref([
-      { title: "Pizza", url: "https://images.pexels.com/photos/4237243/pexels-photo-4237243.jpeg" ,cookTime: "30min",courseType: "Main Course",skillLevel: "Easy",rating : 5,calories: "200"},
+      { title: "Pizza", url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXW2XOn-XqmqMkpFm0Vu3EY7ucauvmt39ZJfTW84zZmNS31MKSRrBNBGg&s" ,cookTime: "30min",courseType: "Main Course",skillLevel: "Easy",rating : 5,calories: "200"},
       { title: "Fish", url: "https://images.pexels.com/photos/14883752/pexels-photo-14883752.jpeg", cookTime: "20min",courseType: "Main Course",skillLevel: "Easy",rating : 5,calories: "200"},
       { title: "Pork", url: "https://images.pexels.com/photos/19062750/pexels-photo-19062750.jpeg", cookTime: "20min",courseType: "Main Course",skillLevel: "Easy",rating : 4,calories: "200" },
       { title: "Cocktail", url: "https://images.pexels.com/photos/4202381/pexels-photo-4202381.jpeg", cookTime: "20min",courseType: "Main Course",skillLevel: "Easy",rating : 5,calories: "200" },
@@ -192,7 +202,9 @@ export default defineComponent({
       { title: "Quick1", url: "https://images.pexels.com/photos/13111770/pexels-photo-13111770.jpeg", cookTime: "20min",courseType: "Main Course",skillLevel: "Easy",rating : 5,calories: "200" },
     ])
 
-
+    const recipeButton = (image: Image) => {
+      router.push({ path: '/checkout/' + image.title});
+    };
     const isFullHeight = ref(false);
 
     onMounted(() => {
@@ -211,7 +223,7 @@ export default defineComponent({
       cousines, selectedCousines,
       orderBy, selectedOrderBy,
       isFullHeight,images,
-      username
+      username,recipeButton
     };
   }
 });

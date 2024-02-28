@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import HomePage from '@/components/HomePage.vue';
 import LoginPage from '@/components/LoginPage.vue';
 import CheckoutPage from '@/components/CheckoutPage.vue';
+import ProfilePage from '@/components/ProfilePage.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -22,6 +23,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/checkout/:recipe_id',
     name: 'checkout',
     component: CheckoutPage
+  },
+  {
+    path: '/profile/:id',
+    name: 'profile',
+    component: ProfilePage
   }
   // Define other routes here
 ];

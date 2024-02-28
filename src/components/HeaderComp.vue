@@ -22,13 +22,13 @@
           <!-- Right Section: User ID or Login / Register -->
           <div v-if="userId">
             <!-- Content when ID is present -->
-            <router-link to="/profile" class="text-black no-color-change">
+            <router-link :to="`/profile/${userId}`" class="text-black no-color-change no-underline">
               <i class="pi pi-user text-xl"></i>
+              <span class="text p-2">Stivaktakis Giorgos: {{ userId }}</span>
             </router-link>
-            <span class="text p-2">Stivaktakis Giorgos: {{ userId }}</span>
           </div>
           <div v-else>
-            <router-link to="/login" class="text-sm font-light p-4">Login / Register</router-link>
+            <router-link to="/login" class="text-sm font-light p-4 no-color-change">Login / Register</router-link>
           </div>
         </div>
   </template>
@@ -69,7 +69,25 @@
   };
   </script>
   
-  <style scoped>
-  /* Your component styles here */
-  </style>
+<style scoped>
+  .no-color-change {
+  color: black; 
+  }
+
+  .no-color-change:visited,
+  .no-color-change:hover,
+  .no-color-change:active,
+  .no-color-change:focus {
+    color: black; 
+  }
+
+  .no-underline {
+  text-decoration: none; /* This removes the underline */
+  }
+
+  .no-underline:hover {
+    text-decoration: none; /* This ensures the underline doesn't appear on hover either */
+  }
+
+</style>
   
