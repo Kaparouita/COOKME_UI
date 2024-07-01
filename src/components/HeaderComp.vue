@@ -7,24 +7,46 @@
               <img src="@/assets/logo.png" alt="logo" width="100%" height="100%">
             </p-Button>
           <!-- Address -->
-            <div class="flex align-items-center w-10rem">
-              <i class="pi pi-map-marker text-xl"></i>
-              <span class="text p-2">Address example</span>
+            <div v-if="address">
+              <div class="flex align-items-center w-10rem">
+                <i class="pi pi-map-marker text-xl"></i>
+                <span class="text p-2">{{ address }}</span>
+              </div>
+            </div>
+            <div v-else>
+              <div class="flex align-items-center w-10rem">
+                <i class="pi pi-map-marker text-xl"></i>
+                <span class="text p-2">Location</span>
+              </div>
             </div>
           </div>
 
           <!-- Center Section: Search Bar -->
           <div class="flex-grow-1 flex align-items-center justify-content-center">
-            <i class="pi pi-search p-2"></i>
-            <p-InputText placeholder="Search" class="surface-100 border-none custom-input"></p-InputText>
+            <p-AutoComplete 
+              placeholder="Search" 
+              class="surface-100 border-none custom-input"
+              v-model="currWord" 
+              :suggestions="autoCompleteSuggestions" 
+              @complete="search"
+              field="keyword"
+            >
+              <template #itemTemplate="slotProps">
+                <div @click="handleSuggestionClick(slotProps.item)">
+                  {{ slotProps.item.keyword }}
+                </div>
+              </template>
+            </p-AutoComplete>
+            <p-Button outlined icon="pi pi-search" @click="handleSuggestionClick(currWord)">
+            </p-Button>
           </div>
 
           <!-- Right Section: User ID or Login / Register -->
-          <div v-if="userId">
+          <div v-if="username">
             <!-- Content when ID is present -->
             <router-link :to="`/profile/${userId}`" class="text-black no-color-change no-underline">
               <i class="pi pi-user text-xl"></i>
-              <span class="text p-2">Stivaktakis Giorgos: {{ userId }}</span>
+              <span class="text p-2">{{ username }}</span>
             </router-link>
           </div>
           <div v-else>
@@ -36,35 +58,80 @@
   <script lang="ts">
 
   import router from '@/router';
+  import { onMounted, ref, watch,toRefs,reactive  } from 'vue';
+  import {searchKeywords,getAllKeywords} from '@/services/searchKeywords';
+  import {User } from '@/models/user';
+  import {getUser} from '@/services/userService';
+  
 
   export default {
     name: 'HeaderComp',
-    setup() {
-        const redirectToPage = () => {
-            router.push('/home');
-        };
-      return {
-        redirectToPage
-      };
-    },
     props: {
-      userId: {
+      username: {
         type: String,
-        required: false,
+        default: ''
       },
-      userName: {
+      address: {
         type: String,
-        required: false,
+        default: ''
       },
+      userId:{
+        type: Number,
+        default: 0
+      }
     },
-    methods: {
-      // Your methods here
-    },
-    computed: {
-      // Your computed properties here
-    },
-    mounted() {
-      // Your mounted hook code here
+    setup(props : any) {
+      const currWord = ref('');
+      const autoCompleteSuggestions = ref([]) as any;
+      const suggestions = ref([]) as any;
+      const { username, address } = toRefs(props);
+      const trimedAddress = address.value.split(',')[0] + ', ' + address.value.split(',')[1];
+
+
+      // get user id from path home/:id
+      const userId = router.currentRoute.value.params.userId;
+      console.log(userId);
+
+      const redirectToPage = () => {
+        router.push('/home/'+userId);
+      };
+
+      const search = (event: any) => {
+        setTimeout(() => {
+          if (!event.query.trim().length) {
+            autoCompleteSuggestions.value = [...suggestions.value];
+          } else {
+            autoCompleteSuggestions.value = suggestions.value.filter((suggestion: any) => {
+              return suggestion.keyword.toLowerCase().startsWith(event.query.toLowerCase());
+            });
+          }
+        }, 250);
+      };
+
+      const handleSuggestionClick = (suggestion: any) => {
+        if(suggestion) {
+          var keyword = suggestion.keyword;
+          console.log(keyword);
+          if(userId)
+            router.push({ path: '/home/'+userId, query: {keyword} });
+          else
+            router.push({ name: 'HomePage', query: {keyword} });
+        }
+      };
+
+      onMounted(async () => {
+        suggestions.value = await getAllKeywords();
+        //if user id from props is present, get user's keywords
+      });
+
+      return {
+        currWord,
+        autoCompleteSuggestions,
+        suggestions,
+        redirectToPage,
+        search, handleSuggestionClick,
+        trimedAddress
+      };
     },
   };
   </script>

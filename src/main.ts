@@ -19,21 +19,14 @@ import Tooltip from 'primevue/tooltip';
 import Skeleton from 'primevue/skeleton';
 import InputSwitch from 'primevue/inputswitch';
 import Password from 'primevue/password';
-
-
+import AutoComplete from 'primevue/autocomplete';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import ColumnGroup from 'primevue/columngroup';   // optional
 import Row from 'primevue/row';                   // optional
-
-
-
 import ProgressSpinner from 'primevue/progressspinner';
-
-
-
-
-
+import VueGoogleMaps from '@fawmi/vue-google-maps'
+import DialogService from 'primevue/dialogservice';
 
 
 
@@ -42,6 +35,8 @@ import ProgressSpinner from 'primevue/progressspinner';
 import 'primeflex/primeflex.css';
 import 'primeicons/primeicons.css';
 import 'primevue/resources/themes/aura-light-green/theme.css'
+import axios from 'axios';
+
 
 
 
@@ -49,6 +44,12 @@ const app = createApp(App);
 
 app.use(PrimeVue);
 app.use(router);
+app.use(VueGoogleMaps, {
+    load: {
+        key: 'AIzaSyCULKAWrNKbSkXtFx74rn80_sZpOlc4R7U',
+    },
+})
+app.use(DialogService);
 
 app.component('p-Button', Button);
 app.component('p-InputText', InputText);
@@ -70,8 +71,12 @@ app.component('p-DataTable', DataTable);
 app.component('p-Column', Column);
 app.component('p-ColumnGroup', ColumnGroup);
 app.component('p-Row', Row);
+app.component('p-AutoComplete', AutoComplete);
 
 
 app.directive('tooltip', Tooltip);
+
+app.config.globalProperties.$axios = axios;
+
 
 app.mount('#app');

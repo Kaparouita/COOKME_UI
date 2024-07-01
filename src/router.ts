@@ -10,9 +10,10 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/home' // Redirect to /home
   },
   {
-    path: '/home/:id?',
+    path: '/home/:userId?',
     name: 'home-id',
-    component: HomePage
+    component: HomePage,
+    props: true
   },
   {
     path: '/login', // Login path
@@ -20,14 +21,17 @@ const routes: Array<RouteRecordRaw> = [
     component: LoginPage
   },
   {
-    path: '/checkout/:recipe_id',
+    // Checkout path with optional userId and recipeId parameters
+    path: '/checkout/:recipeId/:userId?',
     name: 'checkout',
-    component: CheckoutPage
+    component: CheckoutPage,
+    props: true
   },
   {
-    path: '/profile/:id',
+    path: '/profile/:userId?',
     name: 'profile',
-    component: ProfilePage
+    component: ProfilePage,
+    props: true
   }
   // Define other routes here
 ];

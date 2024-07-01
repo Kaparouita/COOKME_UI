@@ -3,7 +3,7 @@
       <div class="grid grid-nogutter -m-2 shadow-bottom w-full h-auto bg-white">
             <!-- Top Grid-->
             <div class="col-12">
-                <HeaderComp  :user-id="userId"/>
+                <HeaderComp  :username="user.username" :address="user.address"/>
             </div>
             <div class="col-12">
               <div class="flex justify-content-between align-items-center flex-row">
@@ -66,7 +66,9 @@
 
 import HeaderComp from '@/components/HeaderComp.vue';
 import { useRoute } from 'vue-router';
-import { ref } from 'vue';
+import { onMounted, ref,reactive,toRefs } from 'vue';
+import { User } from '@/models/user';
+import { getUser } from '@/services/userService';
 
 interface Order {
   id: number;
@@ -85,11 +87,17 @@ export default  {
   components: {
     HeaderComp,
   },
+  props: {
+    userId: {
+      type: Number,
+      required: true,
+    },
+  },
 
-  setup() {
-    const route = useRoute();
-    const userId = route.params.id as string;
+  setup(props: any) {
     var text = ref('Orders');
+    const user = reactive<User>({});
+    const { userId } = toRefs(props);
 
     var products = ref([
       {id: 1, name: 'Pizza', image: 'https://images.pexels.com/photos/4237243/pexels-photo-4237243.jpeg', 
@@ -111,7 +119,14 @@ export default  {
       // Change the products based on the type
     }
 
-    return { userId, products,text, changeProducts};
+    onMounted(async () => {
+      if (userId.value) {
+        const fetchedUser = await getUser(props.userId);
+        Object.assign(user, fetchedUser);
+      }
+    });
+
+    return {products,text, changeProducts,user};
   },
   
 

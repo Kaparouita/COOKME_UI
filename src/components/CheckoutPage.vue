@@ -3,7 +3,7 @@
         <div class="grid grid-nogutter -m-2">
             <!-- Top Grid-->
             <div class="col-12 shadow-bottom">
-                <HeaderComp  />
+                <HeaderComp  :username="user.username" :address="user.address" :userId="user.id"/>
             </div>
                 <!-- Bottom Grids-->
             <div class="col-6">
@@ -29,7 +29,7 @@
                         <p class="text text-xl font-semibold">{{ recipe.title }}</p>
                         <p class="text text-md font-semibold">Ingredients</p>
                         <div class="grid">
-                            <div class="col-8">
+                            <div class="col-8 table-container">
                                 <table class="table w-full justify-content-start">
                                     <thead>
                                         <tr>
@@ -39,10 +39,10 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="ingredient in recipe.ingredients" :key="ingredient.name">
-                                            <td>{{ ingredient.name }}</td>
-                                            <td>{{ ingredient.price }}</td>
-                                            <td><p-Checkbox v-model="selectedIngredients" :value="ingredient" /></td>
+                                        <tr v-for="ingredient in recipe.ingredients" :key="ingredient">
+                                        <td>{{ ingredient }}</td>
+                                        <td>5</td>
+                                        <td><p-Checkbox v-model="selectedIngredients" :value="ingredient" /></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -52,7 +52,7 @@
                                 <div class="flex flex-column justify-content-center align-items-center w-full h-full gap-3">
                                     <p class="text text-xl font-semibold">Total Price</p>
                                     <div class="circle">
-                                            <p class="text text-xl font-semibold">{{ selectedIngredients.reduce((acc, ingredient) => acc + (ingredient.selected ? ingredient.price : 0), 0) }}</p>
+                                            <p class="text text-xl font-semibold">{{ calculateTotalPrice() }}</p>
                                     </div>
                                     <p-Button label="Checkout" class="w-auto m-3" @click="visible = true" />
                                     
@@ -134,8 +134,12 @@
 <script lang="ts">
 
 import HeaderComp from '@/components/HeaderComp.vue';
-import { ref,watch } from 'vue';
+import { ref,watch ,toRefs,reactive, onMounted} from 'vue';
 import router from '@/router';
+import {User} from '@/models/user';
+import {getUser} from '@/services/userService';
+import {fetchRecipe} from '@/services/recipeService';
+import {Recipe} from '@/models/recipe';
 
 
 interface Card {
@@ -151,10 +155,39 @@ export default {
     components: {
         HeaderComp
     },
+        props: {
+            recipeId: {
+                type: Number,
+                required: true,
+            },
+            userId: {
+                type: Number,
+                required: false,
+            },
+        },
+    setup(props : any) {
+        const datetime12h = ref<Date | null>(null);
+        const user = reactive<User>({});
+        const recipe = reactive<Recipe>({ingredients:[]});
+        const { recipeId , userId } = toRefs(props);
 
-    data() {
-        const userId = "2";
-        const userName =  'Stivaktakis Giorgos';
+        watch(datetime12h, (newValue, oldValue) => {
+        if (newValue) {
+            const hours = newValue.getHours();
+            const startHour = 8;  // 8 AM
+            const endHour = 21;   // 9 PM
+
+            if (hours < startHour || hours > endHour) {
+            const adjustedDate = new Date(newValue);
+            if (hours < startHour) {
+                adjustedDate.setHours(startHour);
+            } else {
+                adjustedDate.setHours(endHour);
+            }
+            datetime12h.value = adjustedDate;
+            }
+        }
+        });
         const checkedNow = ref(true);
 
         const orderBy = ref([
@@ -165,30 +198,9 @@ export default {
         const superMarkets = ref([
             { name:"Lidl", value : "lidl" },
             { name:"AB", value : "ab" },
-            { name:"Carrefour", value : "carrefour" }
+            { name:"Sklavenitis", value : "sklavenitis" },
+            { name:"MyMarket", value : "mymarket"}
         ])
-
-        const recipe = ref({
-            name: "Recipe",
-            title: "Greek Salad",
-            ingredients: [
-                { name: "Tomato", quantity: 2, price: 0.5 ,selected: true },
-                { name: "Cucumber", quantity: 1, price: 0.5 ,selected: true },
-                { name: "Feta", quantity: 200, price: 2.5 ,selected: true },
-                { name: "Olives", quantity: 100, price: 1.5 ,selected: true },
-                { name: "Olive Oil", quantity: 100, price: 1.5 ,selected: true },
-                { name: "Salt", quantity: 100, price: 1.5 ,selected: true },
-                { name: "Pepper", quantity: 100, price: 1.5 ,selected: true },
-                { name: "Oregano", quantity: 100, price: 1.5 ,selected: true },
-                { name: "Onion", quantity: 100, price: 1.5 ,selected: true },
-                { name: "Green Pepper", quantity: 100, price: 1.5 ,selected: true },
-                { name: "Red Pepper", quantity: 100, price: 1.5 ,selected: true },
-                { name: "Vinegar", quantity: 100, price: 1.5 ,selected: true },
-                { name: "Lemon", quantity: 100, price: 1.5 ,selected: true },
-                { name: "Garlic", quantity: 100, price: 1.5 ,selected: true },
-            ]
-        
-        });
 
         const columns = ref([
             { field: 'name', header: 'Name' },
@@ -196,12 +208,10 @@ export default {
             { field: 'selected', header: 'Selected' }
         ]);
         
-
-        const selectedOrderBy = ref([]);
-        const selectedSuperMarket = ref([]);
-        const selectedIngredients = ref(recipe.value.ingredients.map((ingredient) => {
-            return { ...ingredient, selected: true };
-        }));
+        // Slected order by default is price
+        const selectedOrderBy = ref(orderBy.value[0]);
+        const selectedSuperMarket = ref();
+        const selectedIngredients = ref([]) as any;
 
         const visible = ref(false);
         const visibleConfirm = ref(false);
@@ -228,54 +238,45 @@ export default {
             visible.value = false;
             router.push('/home');
         }
-
-        return {
-            userId,userName,checkedNow,
-            orderBy,superMarkets,
-            selectedOrderBy,selectedSuperMarket,
-            recipe,selectedIngredients,
-            columns,visible,card,visibleConfirm,
-            returnHome,showSpinner
-
-        };
-    },
-    setup() {
-        const datetime12h = ref<Date | null>(null);
-
-        watch(datetime12h, (newValue, oldValue) => {
-        if (newValue) {
-            const hours = newValue.getHours();
-            const startHour = 8;  // 8 AM
-            const endHour = 21;   // 9 PM
-
-            if (hours < startHour || hours > endHour) {
-            const adjustedDate = new Date(newValue);
-            if (hours < startHour) {
-                adjustedDate.setHours(startHour);
-            } else {
-                adjustedDate.setHours(endHour);
-            }
-            datetime12h.value = adjustedDate;
-            }
-        }
-        });
+        
 
         function isSunday(date: { year: number, month: number, day: number, otherMonth: boolean }): boolean {
             const dayDate = new Date(date.year, date.month, date.day);
             return dayDate.getDay() === 0; // 0 is Sunday
         }
         
+        onMounted(async () => {
+            if (userId.value) {
+                const fetchedUser = await getUser(props.userId);
+                Object.assign(user, fetchedUser);
+            }
 
-        return { datetime12h , isSunday};
-    },
-    methods: {
-        
-    },
-    computed: {
-        // Your computed properties here
-    },
-    mounted() {
-        // Your mounted hook code here
+            if (recipeId.value) {
+                const fetchedRecipe = await fetchRecipe(props.recipeId);
+                Object.assign(recipe, fetchedRecipe);
+                if (recipe.ingredients)
+                    recipe.ingredients = removeDuplicateIngredients(recipe.ingredients);
+                selectedIngredients.value =  recipe.ingredients;
+            }
+        });
+
+        function removeDuplicateIngredients(ingredients : string[]): string[] {
+            const uniqueIngredients = new Set(ingredients);
+            return Array.from(uniqueIngredients);
+        }
+
+        // !TODO: add real price calculation
+        function calculateTotalPrice() {
+            return selectedIngredients.value.length * 5;
+        }
+
+        return { datetime12h , isSunday,user,checkedNow,
+            orderBy,superMarkets,
+            selectedOrderBy,selectedSuperMarket,
+            recipe,selectedIngredients,
+            columns,visible,card,visibleConfirm,
+            returnHome,showSpinner,calculateTotalPrice,
+            removeDuplicateIngredients};
     },
 };
 </script>
@@ -319,6 +320,27 @@ export default {
     text-decoration: line-through;
     color: red;
     }
+
+    .table-container {
+    max-height: 400px; /* Adjust the height as needed */
+    overflow-y: auto;
+    }
+
+    .table-container table {
+    width: 100%;
+    border-collapse: collapse;
+    }
+
+    .table-container th, .table-container td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    }
+
+    .table-container th {
+    background-color: #f2f2f2;
+    }
+
 
 
 </style>
