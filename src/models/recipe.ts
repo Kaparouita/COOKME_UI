@@ -1,5 +1,5 @@
 export class Recipe {
-    id?: number;
+    id = 0;
     description?: string;
     cooking_time?: number;
     prep_time?: number;
@@ -9,7 +9,7 @@ export class Recipe {
     nutrition_info?: any;
     ingredients: string[] = [];
     courses?: string[];
-    cuisine?: string;
+    cuisine: string = '';
     skill_level?: string;
     post_dates?: string;
     title?: string;

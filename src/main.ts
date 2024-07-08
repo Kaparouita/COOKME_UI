@@ -2,6 +2,9 @@ import { createApp } from 'vue';
 import PrimeVue from 'primevue/config';
 import App from './App.vue';
 
+import Chart from 'primevue/chart';
+
+
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import router from './router';
@@ -27,6 +30,14 @@ import Row from 'primevue/row';                   // optional
 import ProgressSpinner from 'primevue/progressspinner';
 import VueGoogleMaps from '@fawmi/vue-google-maps'
 import DialogService from 'primevue/dialogservice';
+import ToastService from 'primevue/toastservice';
+import Toast from 'primevue/toast';
+
+import FileUpload from 'primevue/fileupload';
+
+import TabMenu from 'primevue/tabmenu';
+
+
 
 
 
@@ -50,6 +61,7 @@ app.use(VueGoogleMaps, {
     },
 })
 app.use(DialogService);
+app.use(ToastService);
 
 app.component('p-Button', Button);
 app.component('p-InputText', InputText);
@@ -72,7 +84,10 @@ app.component('p-Column', Column);
 app.component('p-ColumnGroup', ColumnGroup);
 app.component('p-Row', Row);
 app.component('p-AutoComplete', AutoComplete);
-
+app.component('p-Toast', Toast);
+app.component('p-TabMenu', TabMenu);
+app.component('p-Chart', Chart);
+app.component('p-FileUpload', FileUpload);
 
 app.directive('tooltip', Tooltip);
 

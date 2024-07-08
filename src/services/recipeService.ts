@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { Recipe } from '../models/recipe';
+import { Market } from '../models/market';
+import { MarketIngredient } from '@/models/marketIngredient';
+import { Response } from '@/models/response';
 
 const baseURL = 'http://127.0.0.1:3000/recipe'; // Adjust based on your API endpoint
 
@@ -8,8 +11,9 @@ export const fetchRecipe = async (id: number): Promise<Recipe> => {
   return response.data
 };
 
-export const deleteRecipe = async (id: number): Promise<void> => {
-  await axios.delete(`${baseURL}/${id}`);
+export const deleteRecipe = async (id: number): Promise<Response> => {
+  const response = await axios.delete<Response>(`${baseURL}/${id}`);
+  return response.data
 };
 
 export const getRecipes = async (): Promise<Recipe[]> => {
@@ -17,10 +21,15 @@ export const getRecipes = async (): Promise<Recipe[]> => {
   return response.data
 };
 
-export const createRecipe = async (recipe: Recipe): Promise<Recipe> => {
-  const response = await axios.post<Recipe>(`${baseURL}`, recipe);
+export const createRecipe = async (recipe: Recipe): Promise<Response> => {
+  const response = await axios.post<Response>(`${baseURL}`, recipe);
   return response.data
 };
+
+export const saveRecipes = async (recipes: Recipe[]): Promise<Response> => {
+  const response = await axios.post<Response>(`${baseURL}/recipes`, recipes);
+  return response.data
+}
 
 export const getRecipesByCuisines = async (cuisines : string[]): Promise<Recipe[]> => {
   const cuisinesParam = cuisines.join(',');
@@ -44,5 +53,15 @@ export const getRecipesByKeywords = async (keywords : string[]): Promise<Recipe[
   return [];
 }
 
+export const compareMarketPrices = async (recipeID : number, availableMarkets : Market[]): Promise<Market> => {
+  const response = await axios.post<Market>(`${baseURL}/compareMarketPrices/${recipeID}`, availableMarkets);
+  return response.data
+}
+
+export const convertReicpeToMarketIngredients = async (recipeID : number,market : string): Promise<MarketIngredient[]> => {
+  // aslo add the market name as query param
+  const response = await axios.post<MarketIngredient[]>(`${baseURL}/convertToMarketIngredients/${recipeID}?market=${market}`);
+  return response.data
+}
 
 // Add more functions for other operations like updating or creating a recipe

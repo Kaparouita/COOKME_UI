@@ -115,7 +115,8 @@ export default defineComponent({
     const latitude = ref(null) as any;
     const longitude = ref(null) as any;
     const checked = ref(false);
-    const API_KEY = 'AIzaSyCULKAWrNKbSkXtFx74rn80_sZpOlc4R7U';  // Replace with your actual API key
+    // Get API key from .env file
+    const API_KEY = process.env.VUE_APP_GOOGLE_MAPS_API_KEY;
     const center = ref({ lat: 35.316022927650415, lng: 25.14437297990114 });
 
     
@@ -162,8 +163,8 @@ export default defineComponent({
         console.log('Selected location:', markerPosition.value);
         if(checkRegisterValues()) {
           const newUser = new User(username.value,  password.value, email.value,address.value,latitude.value, longitude.value);
+          newUser.user_type = 'user';
           var resp = await createUser(newUser);
-          console.log('User created:', resp);
           if(resp) {
             alert('User created successfully');
           } else {
@@ -192,8 +193,11 @@ export default defineComponent({
       if(resp.status_code == 200) {
          
          var user = await getUserByEmail(email.value);
-         // navigate to /home/:userId
-         router.push({ path: '/home/'+user.id });
+         if(user.user_type == 'admin') {
+           router.push({ path: '/admin/'+user.id });
+         }
+         else 
+           router.push({ path: '/home/'+user.id });
       } else {
         alert('Login failed');
         console.log('Login failed',resp);

@@ -1,5 +1,5 @@
 export class User {
-    id?: number;
+    id = 0;
     created_at?: string;
     first_name?: string;
     last_name?: string;
@@ -13,6 +13,7 @@ export class User {
     url?: string;
     latitude?: number; // Latitude as a floating-point number
     longitude?: number; // Longitude as a floating-point number
+    favorites_recipes?: number[];
     response?: Response;
 
     constructor( username: string, password: string, email : string, 
@@ -23,9 +24,10 @@ export class User {
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.favorites_recipes = [];
+        this.first_name = '';
+        this.last_name = '';
     }
 }
-
-  
 
   

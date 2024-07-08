@@ -174,7 +174,7 @@ export default defineComponent({
     const selectedCuisines = ref<string[]>([]);
     const selectedCuisinesString = computed(() => selectedCuisines.value.join(','));
     const { userId } = toRefs(props);
-    const user = reactive<User>({});
+    const user = reactive<User>({id:0,created_at:''});
 
     const route = useRoute();
     const router = useRouter();

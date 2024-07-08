@@ -1,0 +1,69 @@
+<recipes>
+    <recipe>
+        <description>Delicious recipe</description>
+        <cooking_time>30</cooking_time>
+        <prep_time>15</prep_time>
+        <serves>4</serves>
+        <keywords>
+            <keyword>easy</keyword>
+            <keyword>quick</keyword>
+        </keywords>
+        <ratings>95</ratings>
+        <nutrition_info>
+            <saturated_fat>10.5</saturated_fat>
+            <protein>5.4</protein>
+            <fat>20.3</fat>
+            <kcal>350</kcal>
+            <added_sugar>5.0</added_sugar>
+            <carbohydrate>50.0</carbohydrate>
+            <salt>1.2</salt>
+        </nutrition_info>
+        <ingredients>
+            <ingredient>1 cup flour</ingredient>
+            <ingredient>2 eggs</ingredient>
+        </ingredients>
+        <courses>
+            <course>main</course>
+            <course>starter</course>
+        </courses>
+        <cuisine>Italian</cuisine>
+        <skill_level>easy</skill_level>
+        <post_dates>2024-06-28</post_dates>
+        <title>Delicious recipe1</title>
+        <image>http://example.com/pizza.jpg</image>
+    </recipe>
+
+    <recipe>
+        <description>Delicious recipe2</description>
+        <cooking_time>30</cooking_time>
+        <prep_time>15</prep_time>
+        <serves>4</serves>
+        <keywords>
+            <keyword>easy</keyword>
+            <keyword>quick</keyword>
+        </keywords>
+        <ratings>95</ratings>
+        <nutrition_info>
+            <saturated_fat>10.5</saturated_fat>
+            <protein>5.4</protein>
+            <fat>20.3</fat>
+            <kcal>350</kcal>
+            <added_sugar>5.0</added_sugar>
+            <carbohydrate>50.0</carbohydrate>
+            <salt>1.2</salt>
+        </nutrition_info>
+        <ingredients>
+            <ingredient>1 cup flour</ingredient>
+            <ingredient>2 eggs</ingredient>
+        </ingredients>
+        <courses>
+            <course>main</course>
+            <course>starter</course>
+        </courses>
+        <cuisine>Italian</cuisine>
+        <skill_level>easy</skill_level>
+        <post_dates>2024-06-28</post_dates>
+        <title>Delicious recipe2</title>
+        <image>http://example.com/pizza.jpg</image>
+    </recipe>
+</recipes>

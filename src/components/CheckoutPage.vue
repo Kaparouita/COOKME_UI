@@ -22,8 +22,16 @@
                             <div class="flex flex-column gap-2">
                                 <p class="text text-xl font-semibold">SuperMarket</p>
                                 <p-Dropdown v-model="selectedSuperMarket" :options="superMarkets" optionLabel="name" placeholder="Select Supermarket" class="w-full md:w-14rem" />
+                                <div v-if="currMarket.distance !== 0">
+                                    <p class="text text-md ">Distance: {{ currMarket.distance / 1000 }} km</p>
+                                </div>
+                                <div v-else>
+                                    <p class="text text-md ">Distance: (Login First)</p>
+                                </div>
+                                
                             </div>
                         </div>
+                        
                     </div> 
                     <div class="card flex flex-column w-full justify-content-start">
                         <p class="text text-xl font-semibold">{{ recipe.title }}</p>
@@ -39,9 +47,9 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="ingredient in recipe.ingredients" :key="ingredient">
-                                        <td>{{ ingredient }}</td>
-                                        <td>5</td>
+                                        <tr v-for="ingredient in ingredients" :key="ingredient.name">
+                                        <td>{{ ingredient.name }}</td>
+                                        <td>{{ ingredient.price }}</td>
                                         <td><p-Checkbox v-model="selectedIngredients" :value="ingredient" /></td>
                                         </tr>
                                     </tbody>
@@ -101,7 +109,7 @@
                                         <template #footer>
                                             <div class="flex justify-content-end gap-2">
                                                 <p-Button label="Cancel" icon="pi pi-times" @click="visible = false" class="bg-indigo-400"></p-Button>
-                                                <p-Button label="Order" icon="pi pi-shopping-cart"  class="bg-indigo-400" @click="visibleConfirm = true"></p-Button>
+                                                <p-Button label="Order" icon="pi pi-shopping-cart"  class="bg-indigo-400" @click="orderButton()"></p-Button>
 
                                                 <p-Dialog v-model:visible="visibleConfirm" :modal="true" :closable="false" :style="{ width: '30rem' }" header="Order Confirmation">
                                                     <p-ProgressSpinner v-if="showSpinner" class="p-button-text" />
@@ -128,6 +136,9 @@
                 </div>
             </div>
         </div>
+        <div v-if="showSpinner2" class="spinner-overlay">
+            <p-ProgressSpinner class="spinner" />
+        </div>
     </div>
 </template>
 
@@ -137,9 +148,12 @@ import HeaderComp from '@/components/HeaderComp.vue';
 import { ref,watch ,toRefs,reactive, onMounted} from 'vue';
 import router from '@/router';
 import {User} from '@/models/user';
-import {getUser} from '@/services/userService';
-import {fetchRecipe} from '@/services/recipeService';
+import {getUser,findAllAvailableMarkets,findClosestMarket,order} from '@/services/userService';
+import {fetchRecipe,compareMarketPrices,convertReicpeToMarketIngredients} from '@/services/recipeService';
 import {Recipe} from '@/models/recipe';
+import {Market} from '@/models/market';
+import {Order} from '@/models/order';
+import { MarketIngredient } from '@/models/marketIngredient';
 
 
 interface Card {
@@ -166,10 +180,18 @@ export default {
             },
         },
     setup(props : any) {
-        const datetime12h = ref<Date | null>(null);
-        const user = reactive<User>({});
-        const recipe = reactive<Recipe>({ingredients:[]});
+
+        // datetime is default to now   
+        const datetime12h = ref<Date>(new Date());
+        const user = reactive<User>({id:0,created_at:''});
+        const recipe = reactive<Recipe>({ingredients:[],id:0,cuisine:""});
+        const ingredients = ref<MarketIngredient[]>([]);
         const { recipeId , userId } = toRefs(props);
+        const currMarket = ref<Market>({
+            name: 'AB',
+            distance: 0,
+        });
+
 
         watch(datetime12h, (newValue, oldValue) => {
         if (newValue) {
@@ -210,12 +232,15 @@ export default {
         
         // Slected order by default is price
         const selectedOrderBy = ref(orderBy.value[0]);
-        const selectedSuperMarket = ref();
-        const selectedIngredients = ref([]) as any;
+        const selectedSuperMarket = ref(superMarkets.value[0]);
+        const selectedIngredients = ref<MarketIngredient[]>([]);
 
         const visible = ref(false);
         const visibleConfirm = ref(false);
         const showSpinner = ref(false);
+        const showSpinner2 = ref(false);
+
+
 
         watch(visibleConfirm, (newValue) => {
             if (newValue) {
@@ -226,17 +251,18 @@ export default {
             }
         });
 
+
         const card = ref<Card>({
-            cardholderName: '',
-            cardNumber: '',
-            expirationDate: '',
-            securityCode: ''
+            cardholderName: 'test',
+            cardNumber: '3333 - 3333 - 3333 - 3333',
+            expirationDate: '12/23',
+            securityCode: '123',
         });
 
         function returnHome() {
             visibleConfirm.value = false;
             visible.value = false;
-            router.push('/home');
+            router.push('/home/'+userId.value);
         }
         
 
@@ -246,28 +272,165 @@ export default {
         }
         
         onMounted(async () => {
-            if (userId.value) {
-                const fetchedUser = await getUser(props.userId);
-                Object.assign(user, fetchedUser);
-            }
+            showSpinner2.value = true;  // Set loading state to true
+            setTimeout(async () => {
+                try {
+                    if (userId.value) {
+                        const fetchedUser = await getUser(props.userId);
+                        Object.assign(user, fetchedUser);
+                        const fetchedRecipe = await fetchRecipe(props.recipeId);
+                        Object.assign(recipe, fetchedRecipe);
+                        if (recipe.ingredients)
+                            recipe.ingredients = removeDuplicateIngredients(recipe.ingredients);
 
-            if (recipeId.value) {
-                const fetchedRecipe = await fetchRecipe(props.recipeId);
-                Object.assign(recipe, fetchedRecipe);
-                if (recipe.ingredients)
-                    recipe.ingredients = removeDuplicateIngredients(recipe.ingredients);
-                selectedIngredients.value =  recipe.ingredients;
-            }
+                        const markets = await findAllAvailableMarkets(userId.value);
+                        const cheapestMarket = await compareMarketPrices(recipeId.value, markets);
+                        updateNewMarket(cheapestMarket);
+                    }else {
+                        const fetchedRecipe = await fetchRecipe(props.recipeId);
+                        Object.assign(recipe, fetchedRecipe);
+                        if (recipe.ingredients)
+                            recipe.ingredients = removeDuplicateIngredients(recipe.ingredients);
+                        const selectedMarket = new Market(currMarket.value.name, 0);
+                        updateNewMarket(selectedMarket);
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+                showSpinner2.value = false;
+            }, 1000);
         });
+
+        function updateSelectedMarket(market : Market) {
+            if (market.name === 'Lidl') {
+                selectedSuperMarket.value = superMarkets.value[0];
+                return "Lidl";
+            } else if (market.name === 'AB') {
+                selectedSuperMarket.value = superMarkets.value[1]; 
+                return "AB";
+            } else if (market.name === 'Sklavenitis') {
+                selectedSuperMarket.value = superMarkets.value[2];
+                return "Sklavenitis";
+            } else if (market.name === 'MyMarket') {
+                selectedSuperMarket.value = superMarkets.value[3];
+                return "MyMarket";
+            }
+            return market.name;
+        }
 
         function removeDuplicateIngredients(ingredients : string[]): string[] {
             const uniqueIngredients = new Set(ingredients);
             return Array.from(uniqueIngredients);
         }
 
+        function removeDuplicateMarketIngredients(ingredients : MarketIngredient[]): MarketIngredient[] {
+            for (let i = 0; i < ingredients.length; i++) {
+                for (let j = i + 1; j < ingredients.length; j++) {
+                    if (ingredients[i].name === ingredients[j].name) {
+                        ingredients[i].price = Math.min(ingredients[i].price, ingredients[j].price);
+                        ingredients.splice(j, 1);
+                    }
+                }
+            }
+            return ingredients;
+        }
+
         // !TODO: add real price calculation
         function calculateTotalPrice() {
-            return selectedIngredients.value.length * 5;
+            const result = selectedIngredients.value.reduce((acc, ingredient) => acc + ingredient.price, 0);
+            return result.toFixed(2);
+        }
+
+        const updatingMarketFlag = ref(false);
+        watch(selectedOrderBy, async (newValue) => {
+            if (!userId.value) {
+                alert('You need to be logged in order to find the closest/cheapeast market');
+                return;
+            }
+            updatingMarketFlag.value = true;
+            showSpinner2.value = true;  // Set loading state to true
+            setTimeout(async () => {
+                try {
+                    if (newValue == orderBy.value[1]) {
+                        const closestMarket = await findClosestMarket(userId.value);
+                        updateNewMarket(closestMarket);
+                    }else {
+                        const markets = await findAllAvailableMarkets(userId.value);
+                        const cheapestMarket = await compareMarketPrices(recipeId.value, markets);
+                        updateNewMarket(cheapestMarket);
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+                showSpinner2.value = false; 
+            }, 1000); 
+        });
+
+        // function changeMarketToBasic(name : string) : string {
+        //     if (name === 'Lidl') {
+        //         return "Lidl";
+        //     } else if (name === 'AB') {
+        //         return "ΑΒ Βασιλόπουλος";
+        //     } else if (name === 'Sklavenitis') {
+        //         return "ΣΚΛΑΒΕΝΙΤΗΣ";
+        //     } else if (name === 'MyMarket') {
+        //         return "My market";
+        //     }
+        //     return name;
+        // }
+
+        watch(selectedSuperMarket, async (newValue) => {
+            if (updatingMarketFlag.value) {
+                updatingMarketFlag.value = false;
+                return;
+            }
+            if (!userId.value) {
+                const selectedMarket = new Market(newValue.name, 0);
+                updateNewMarket(selectedMarket);
+            }
+            showSpinner2.value = true;  // Set loading state to true
+            setTimeout(async () => {
+                try {
+                    const markets = await findAllAvailableMarkets(userId.value);
+                    const selectedMarket = markets.find(market => market.name === newValue.name);
+                    if (!selectedMarket){
+                        alert('There is no '+ newValue.name + ' in 5km radius');
+                        showSpinner2.value = false;
+                        return;
+                    }
+                    updateNewMarket(selectedMarket);
+                } catch (error) {
+                    console.error(error);
+                }
+                showSpinner2.value = false; 
+            }, 1000); 
+        });
+
+        async function updateNewMarket(newMarket : Market) {
+            newMarket.name = updateSelectedMarket(newMarket);
+            const marketIngredients = await convertReicpeToMarketIngredients(recipeId.value, newMarket.name);
+            const marketIngredientsWithoutDuplicates = removeDuplicateMarketIngredients(marketIngredients);
+            console.log(marketIngredientsWithoutDuplicates);
+            ingredients.value = marketIngredientsWithoutDuplicates;
+            selectedIngredients.value = ingredients.value;
+            currMarket.value = newMarket;
+        
+        }
+
+        async function orderButton() {
+            if (!userId.value) {
+                alert('You need to be logged in order to place an order');
+                return;
+            }
+            if(!card.value.cardholderName || !card.value.cardNumber || !card.value.expirationDate || !card.value.securityCode) {
+                alert('Please fill in all the fields');
+                return;
+            }
+            const totalPrice = parseFloat(calculateTotalPrice());
+            const stringDate = datetime12h.value.toISOString();
+            const orderVal = new Order(user.id, recipe.id, currMarket.value.name, totalPrice,checkedNow.value, stringDate,"In Progress");
+            var resp = await order(orderVal);
+            visibleConfirm.value = true;
         }
 
         return { datetime12h , isSunday,user,checkedNow,
@@ -276,7 +439,9 @@ export default {
             recipe,selectedIngredients,
             columns,visible,card,visibleConfirm,
             returnHome,showSpinner,calculateTotalPrice,
-            removeDuplicateIngredients};
+            removeDuplicateIngredients,updateSelectedMarket,
+            currMarket,ingredients,showSpinner2,updatingMarketFlag,orderButton
+            };
     },
 };
 </script>
@@ -341,6 +506,22 @@ export default {
     background-color: #f2f2f2;
     }
 
+    .spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Ensure it appears above all other content */
+}
+
+.spinner {
+    z-index: 10000; /* Ensure it appears above the overlay */
+}
 
 
 </style>

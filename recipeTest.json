@@ -1,0 +1,51 @@
+[
+    {
+      "description": "Delicious recipe",
+      "cooking_time": 30,
+      "prep_time": 15,
+      "serves": 4,
+      "keywords": ["easy", "quick"],
+      "ratings": 95,
+      "ingredients": ["1 cup flour", "2 eggs"],
+      "courses": ["main"],
+      "cuisine": "Italian",
+      "nutrition_info": {
+        "saturated_fat": 10.5,
+        "protein": 5.4,
+        "fat": 20.3,
+        "kcal": 350,
+        "added_sugar": 5.0,
+        "carbohydrate": 50.0,
+        "salt": 1.2
+		  },
+      "skill_level": "easy",
+      "post_dates": "2024-06-28",
+      "title": "Delicious recipe 1",
+      "image": "http://example.com/pizza.jpg"
+    },
+    
+    {
+      "description": "Delicious recipe2",
+      "cooking_time": 30,
+      "prep_time": 15,
+      "serves": 4,
+      "keywords": ["easy", "quick"],
+      "ratings": 95,
+      "ingredients": ["1 cup flour", "2 eggs"],
+      "courses": ["main"],
+      "cuisine": "Italian",
+      "nutrition_info": {
+        "saturated_fat": 10.5,
+        "protein": 5.4,
+        "fat": 20.3,
+        "kcal": 350,
+        "added_sugar": 5.0,
+        "carbohydrate": 50.0,
+        "salt": 1.2
+		  },
+      "skill_level": "easy",
+      "post_dates": "2024-06-28",
+      "title": "Delicious recipe 2",
+      "image": "http://example.com/pizza.jpg2"
+    }
+]

@@ -3,6 +3,7 @@ import HomePage from '@/components/HomePage.vue';
 import LoginPage from '@/components/LoginPage.vue';
 import CheckoutPage from '@/components/CheckoutPage.vue';
 import ProfilePage from '@/components/ProfilePage.vue';
+import AdminPage from './components/AdminPage.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -32,6 +33,11 @@ const routes: Array<RouteRecordRaw> = [
     name: 'profile',
     component: ProfilePage,
     props: true
+  },
+  {
+    path: '/admin/:userId?',
+    name: 'admin',
+    component: AdminPage
   }
   // Define other routes here
 ];
