@@ -85,6 +85,7 @@
                   </div>
                 </template>
               </p-Column>
+              <p-ConfirmDialog></p-ConfirmDialog>
             </div>
             <div v-else-if="text == 'Favorites'">
               <p-Column field="cuisine" header="Cuisine"/>
@@ -133,7 +134,7 @@
 <script lang="ts">
 
 import HeaderComp from '@/components/HeaderComp.vue';
-import { useRoute } from 'vue-router';
+import { useConfirm } from "primevue/useconfirm";
 import { onMounted, ref,reactive,toRefs } from 'vue';
 import { User } from '@/models/user';
 import { getUser } from '@/services/userService';
@@ -145,17 +146,6 @@ import {getProfileRecipes,addFavoriteRecipe,getReviewsByUserID,getFavoriteRecipe
 import { ProfileRecipeResponse } from '@/models/profileResponse';
 import { Recipe } from '@/models/recipe';
 import { Review } from '@/models/review';
-
-interface Order {
-  id: number;
-  order_number: string;
-  address: string;
-  name: string;
-  image: string;
-  price: number;
-  rating: number;
-  status: string;
-}
 
 export default  {
   name: 'ProfilePage',
@@ -299,18 +289,40 @@ export default  {
       changeProducts('Orders');
     });
 
-    async function cancelOrder(recipe_id: number) {
-      var resp = await removeOrder(recipe_id,user.id);
-      if (resp.status_code == 200) {
-        const product = products.value.find((product: any) => product.id === recipe_id);
-        if (product) {
-          product.status = 'Declined';
-          toast.add({ severity: 'success', summary: 'Success', detail: 'Order canceled', life: 3000 });
-        }
-      } else {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Order could not be canceled', life: 3000 });
-      }
-    }
+
+    const confirm = useConfirm() as any;
+
+    const cancelOrder = (recipe_id: number) => {
+      confirm.require({
+          message: 'Are you sure you want to cancel this order?',
+          header: 'Confirmation',
+          icon: 'pi pi-exclamation-triangle',
+          rejectProps: {
+              label: 'No',
+              severity: 'secondary',
+              outlined: true
+          },
+          acceptProps: {
+              label: 'Yes'
+          },
+          accept:async () => {
+              var resp = await removeOrder(recipe_id,user.id);
+              if (resp.status_code == 200) {
+                const product = products.value.find((product: any) => product.id === recipe_id);
+                if (product) {
+                  product.status = 'Declined';
+                  toast.add({ severity: 'success', summary: 'Success', detail: 'Order canceled', life: 3000 });
+                }
+              } else {
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Order could not be canceled', life: 3000 });
+              }
+          },
+          reject: () => {
+              toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
+          }
+      });
+    };
+
 
     async function addToFavorites(id: number) {
       var resp = await addFavoriteRecipe(user.id, id);

@@ -25,7 +25,7 @@
                   <div class="p-field flex flex-column gap-3">
                     <p-Password id="password" v-model="password" :feedback="false" />
                     <div class="flex p-field-checkbox">
-                      <p-Checkbox v-model="checked" inputId="binary" class="text text-md" />
+                      <p-Checkbox v-model="checked" :binary="true" class="text text-md" />
                       <label for="binary" class="text text-md ml-1">Remember me</label>
                       <router-link to="/forgot-password" class="text text-md font-light ml-3">Forgot password?</router-link>
                     </div>
@@ -93,6 +93,7 @@ import { createUser,getUser,checkLogin,getUserByEmail } from '@/services/userSer
 import {User } from '@/models/user';
 import { LoginResponse } from '@/models/loginResponse';
 import router from '@/router';
+import { useAuthStore } from '@/stores/auth';
 
 export default defineComponent({
   name: 'RegistrationComponent',
@@ -115,6 +116,7 @@ export default defineComponent({
     const latitude = ref(null) as any;
     const longitude = ref(null) as any;
     const checked = ref(false);
+    const authStore = useAuthStore();
     // Get API key from .env file
     const API_KEY = process.env.VUE_APP_GOOGLE_MAPS_API_KEY;
     const center = ref({ lat: 35.316022927650415, lng: 25.14437297990114 });
@@ -191,13 +193,15 @@ export default defineComponent({
       var loginResponse = new LoginResponse(email.value, password.value);
       var resp = await checkLogin(loginResponse);
       if(resp.status_code == 200) {
-         
          var user = await getUserByEmail(email.value);
          if(user.user_type == 'admin') {
-           router.push({ path: '/admin/'+user.id });
+            authStore.login(user.id)
+            router.push({ path: '/admin/'+user.id });
          }
-         else 
-           router.push({ path: '/home/'+user.id });
+         else {
+            authStore.login(user.id)
+            router.push({ path: '/home/'+user.id });
+          }
       } else {
         alert('Login failed');
         console.log('Login failed',resp);

@@ -154,9 +154,14 @@ export default defineComponent({
   props: {
     userId: {
       type: Number,
-      required: true,
+      required: false,
     },
+    keyword: {
+      type: String,
+      default: ''
+    }
   },
+  
 
   directives: {
     'infinite-scroll': vInfiniteScroll,
@@ -174,13 +179,12 @@ export default defineComponent({
     const selectedCuisines = ref<string[]>([]);
     const selectedCuisinesString = computed(() => selectedCuisines.value.join(','));
     const { userId } = toRefs(props);
+    const { keyword } = toRefs(props);
     const user = reactive<User>({id:0,created_at:''});
 
     const route = useRoute();
     const router = useRouter();
 
-    // Get the user id from the route params and turn it into number
-    var keyword = ref(route.query.keyword || '').value.toString();
 
     const cousines = ref([
       { name: "Italian", key: "Italian" },
@@ -219,16 +223,14 @@ export default defineComponent({
       if (userId.value) {
         const fetchedUser = await getUser(props.userId);
         Object.assign(user, fetchedUser);
-        console.log("[LOG] User: ", user);
       }
       
-
       recipes.value = await getRecipes();
       filteredRecipes.value = recipes.value;
       
-      if (keyword) {
+      if (keyword.value) {
         // Get the keyword from the route params and turn it into a string from a String object
-        getKeywordsButton(keyword);
+        getKeywordsButton(keyword.value);
       } 
 
       const contentHeight = document.querySelector('.right-grid')?.clientHeight ?? 0;
@@ -295,28 +297,24 @@ export default defineComponent({
 
     const applyFilters = async () => {
       // Apply cuisine filters
-      // console.log("[LOG] Applying filters to recipes: ",filteredRecipes.value.length);
       filteredRecipes.value = recipes.value;
       if (selectedCuisines.value.length !== 0) {
-        // console.log("[LOG] Applying cuisine filters: ", selectedCuisines.value);
         filteredRecipes.value = await getRecipesByCuisines(selectedCuisines.value);
       }
       // Apply keyword filters
-      if (keyword) {
-        // console.log("[LOG] Applying keyword filter: ", keyword);
+      if (keyword.value) {
         let keywords = [];
-        keywords = await searchKeywords(keyword);
+        keywords = await searchKeywords(keyword.value);
         var recipesWithKeywords = await getRecipesByKeywords(keywords);
         filteredRecipes.value = matchCurrentRecipesWithKeywords(filteredRecipes.value ,recipesWithKeywords);
       }
-      // console.log("[LOG] Filtered recipes: ", filteredRecipes.value.length) ;
       updateDisplayedRecipes();
     };
 
 
     const getKeywordsButton = (keyword : string) => {
       // clear current keyword and apply new one
-      router.push({ query: { keyword } });
+      router.push({ query: { keyword: keyword } });
       // applyFilters();
     };
 
@@ -331,7 +329,7 @@ export default defineComponent({
       selectedCuisines.value = [];
       selectedOrderBy.value = "Default"
       filteredRecipes.value = recipes.value;
-      keyword = "";
+      keyword.value = "";
       updateDisplayedRecipes();
     };
 
@@ -340,7 +338,7 @@ export default defineComponent({
 
     // watch query params
     watchEffect(() => {
-      keyword = route.query.keyword?.toString() || '';
+      keyword.value = route.query.keyword?.toString() || '';
       // console.log("[LOG] Query params changed: ", keyword);
       applyFilters();
     });
@@ -351,7 +349,7 @@ export default defineComponent({
       orderBy, selectedOrderBy, updateOrderBy,
       isFullHeight,recipes, displayedRecipes, itemsPerPage, loading, loadMore, getCourseType,
       recipeButton, updateDisplayedRecipes,
-      titleLength, getKeywordsButton ,keyword,
+      titleLength, getKeywordsButton ,
       removeFilters, filteredRecipes,user
     };
   },

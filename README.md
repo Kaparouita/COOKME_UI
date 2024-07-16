@@ -45,11 +45,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - Tranform secs in cooking time to hours and minutes
 - handle login errors
 - change &amp; to & in recipe description
-- otan den einai login den kanei swsto search
-- add logout
-- otan kanei decline to order na petaei kapoio confirmation dialog
 
 ### Nice to have
 
 - fix forgot password
-- add remember me

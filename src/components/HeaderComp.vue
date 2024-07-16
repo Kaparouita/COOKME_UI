@@ -42,16 +42,19 @@
           </div>
 
           <!-- Right Section: User ID or Login / Register -->
-          <div v-if="username">
-            <!-- Content when ID is present -->
-            <router-link :to="`/profile/${userId}`" class="text-black no-color-change no-underline">
-              <i class="pi pi-user text-xl"></i>
-              <span class="text p-2">{{ username }}</span>
-            </router-link>
-          </div>
-          <div v-else>
-            <router-link to="/login" class="text-sm font-light p-4 no-color-change">Login / Register</router-link>
-          </div>
+            <div v-if="username">
+              <div class="flex gap-4">
+                <!-- Content when ID is present -->
+                <router-link :to="`/profile/${userId}`" class="text-black no-color-change no-underline">
+                  <i class="pi pi-user text-xl mt-2"></i>
+                  <span class="text p-2">{{ username }}</span>
+                </router-link>
+                  <p-Button icon="pi pi-sign-out" @click="logout" class="text-black no-color-change no-underline" rounded/>
+              </div>
+            </div>
+            <div v-else>
+              <router-link to="/login" class="text-sm font-light p-4 no-color-change">Login / Register</router-link>
+            </div>
         </div>
   </template>
   
@@ -59,9 +62,8 @@
 
   import router from '@/router';
   import { onMounted, ref, watch,toRefs,reactive  } from 'vue';
-  import {searchKeywords,getAllKeywords} from '@/services/searchKeywords';
-  import {User } from '@/models/user';
-  import {getUser} from '@/services/userService';
+  import {getAllKeywords} from '@/services/searchKeywords';
+  import { useAuthStore } from '@/stores/auth';
   
 
   export default {
@@ -87,7 +89,7 @@
       const { username, address } = toRefs(props);
       const trimedAddress = address.value.split(',')[0] + ', ' + address.value.split(',')[1];
 
-
+      const authStore = useAuthStore();
       // get user id from path home/:id
       const userId = router.currentRoute.value.params.userId;
       console.log(userId);
@@ -115,14 +117,19 @@
           if(userId)
             router.push({ path: '/home/'+userId, query: {keyword} });
           else
-            router.push({ name: 'HomePage', query: {keyword} });
+            router.push({ path: '/home', query: {keyword} });
         }
       };
 
       onMounted(async () => {
         suggestions.value = await getAllKeywords();
-        //if user id from props is present, get user's keywords
+        //if user id from props ihttps://primevue.org/checkbox/s present, get user's keywords
       });
+
+      const logout = () => {
+        authStore.logout();
+        router.push('/login');
+      };
 
       return {
         currWord,
@@ -130,7 +137,7 @@
         suggestions,
         redirectToPage,
         search, handleSuggestionClick,
-        trimedAddress
+        trimedAddress,logout
       };
     },
   };

@@ -3,11 +3,14 @@
     <div class="grid grid-nogutter -m-2 h-full">
       <div class="col-12 h-full">
           <div class="card h-full">
-            <div class="flex mb-2 gap-2 justify-content-end">
+            <div class="flex mb-2 gap-2 justify-content-center">
                 <p-Button @click="active = 0" rounded label="1"  :outlined="active !== 0" />
                 <p-Button @click="active = 1" rounded label="2"  :outlined="active !== 1" />
                 <p-Button @click="active = 2" rounded label="3"  :outlined="active !== 2" />
                 <p-Button @click="active = 3" rounded label="4"  :outlined="active !== 3" />
+            </div>
+            <div class="flex justify-content-end">
+              <p-Button icon="pi pi-sign-out" @click="logout" class="text-black no-color-change no-underline" rounded/>
             </div>
             <p-TabMenu v-model:activeIndex="active" :model="items" />
               <!-- CHARTS -->
@@ -273,8 +276,9 @@
   import { User } from '@/models/user';
   import vInfiniteScroll from '@/services/v-infinite-scroll';
   import { useToast } from "primevue/usetoast";
-  import {Response} from '@/models/response';
   import {getAllKeywords,searchKeywords} from '@/services/searchKeywords';
+  import { useRouter } from 'vue-router';
+  import { useAuthStore } from '@/stores/auth';
  
   type Records = Record<string, number>;
   
@@ -631,6 +635,14 @@
           }
         }, 250);
       };
+
+      const authStore = useAuthStore();
+      const router = useRouter();
+
+      const logout = () => {
+        authStore.logout();
+        router.push('/login');
+      };
       
       async function removeFilters() {
         currWord.value = '';
@@ -645,7 +657,7 @@
         items,active,chartDataCuisines,chartOptionsCuisines,chartDataMarket,chartOptionsMarket
         ,chartDataUsers,chartOptionsUsers,recipes,displayedRecipes,postdate,loadMore,loading,users,decodeUserDate,
         fileupload,upload,toast,onSelect,processFile,jsonData,xmlData,removeRecipe,removeUser,handleSuggestionClick,currWord,
-        autoCompleteSuggestions,search,removeFilters
+        autoCompleteSuggestions,search,removeFilters,logout
       };
     },
   });
