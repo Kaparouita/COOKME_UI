@@ -275,22 +275,29 @@ export default {
             showSpinner2.value = true;  // Set loading state to true
             setTimeout(async () => {
                 try {
+                    const fetchedRecipe = await fetchRecipe(props.recipeId);
+                    Object.assign(recipe, fetchedRecipe);
+                    if (recipe.ingredients)
+                        recipe.ingredients = removeDuplicateIngredients(recipe.ingredients);
+
                     if (userId.value) {
                         const fetchedUser = await getUser(props.userId);
                         Object.assign(user, fetchedUser);
-                        const fetchedRecipe = await fetchRecipe(props.recipeId);
-                        Object.assign(recipe, fetchedRecipe);
-                        if (recipe.ingredients)
-                            recipe.ingredients = removeDuplicateIngredients(recipe.ingredients);
 
-                        const markets = await findAllAvailableMarkets(userId.value);
-                        const cheapestMarket = await compareMarketPrices(recipeId.value, markets);
-                        updateNewMarket(cheapestMarket);
-                    }else {
-                        const fetchedRecipe = await fetchRecipe(props.recipeId);
-                        Object.assign(recipe, fetchedRecipe);
-                        if (recipe.ingredients)
-                            recipe.ingredients = removeDuplicateIngredients(recipe.ingredients);
+                        try {
+                            const markets = await findAllAvailableMarkets(userId.value);
+                            if (markets && markets.length > 0) {
+                                const cheapestMarket = await compareMarketPrices(recipeId.value, markets);
+                                updateNewMarket(cheapestMarket);
+                            } else {
+                                const selectedMarket = new Market(currMarket.value.name, 0);
+                                updateNewMarket(selectedMarket);
+                            }
+                        } catch {
+                            const selectedMarket = new Market(currMarket.value.name, 0);
+                            updateNewMarket(selectedMarket);
+                        }
+                    } else {
                         const selectedMarket = new Market(currMarket.value.name, 0);
                         updateNewMarket(selectedMarket);
                     }

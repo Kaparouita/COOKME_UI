@@ -127,26 +127,19 @@ export default defineComponent({
     };
 
     const onRegister = async () => {
-      if (!address.value.trim()) {
-        alert('Please enter a valid address.');
-        return;
-      }
+      if (!checkRegisterValues()) return;
       try {
-        const googleMaps = await loadGoogleMaps(API_KEY);
-        const geocoder = new googleMaps.Geocoder();
-        geocoder.geocode({ address: address.value }, (results : any, status : any) => {
-          if (status === 'OK') {
-            center.value = {
-              lat: results[0].geometry.location.lat(),
-              lng: results[0].geometry.location.lng()
-            };
-            showMap.value = true;
-          } else {
-            alert('Geocode was not successful for the following reason: ' + status);
-          }
-        });
+        const newUser = new User(username.value, password.value, email.value, address.value, 0, 0);
+        newUser.user_type = 'user';
+        const resp = await createUser(newUser);
+        if (resp) {
+          alert('User created successfully');
+        } else {
+          alert('User creation failed');
+        }
       } catch (error) {
-        console.error('Error loading Google Maps:', error);
+        console.error('Error creating user:', error);
+        alert('User creation failed');
       }
     };
 

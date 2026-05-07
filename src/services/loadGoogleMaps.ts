@@ -5,13 +5,16 @@ export function loadGoogleMaps(apiKey: string): Promise<typeof google.maps> {
       return;
     }
 
+    const callbackName = `__googleMapsInit_${Date.now()}`;
+    (window as any)[callbackName] = () => {
+      resolve(window.google.maps);
+      delete (window as any)[callbackName];
+    };
+
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
     script.async = true;
     script.defer = true;
-    script.onload = () => {
-      resolve(window.google.maps);
-    };
     script.onerror = reject;
     document.head.appendChild(script);
   });
